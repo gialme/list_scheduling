@@ -335,7 +335,7 @@ def priority_scheduling(array_operations, asap_schedule, alap_schedule, n_mult, 
 
         # search for ready multiplications
         for i in range(n_mult):
-            for k in range(num_op):
+            for j in range(num_op):
                 if array_operations[j].type == '*' and ready[j] == 1:
                     if j in mult:
                         continue
