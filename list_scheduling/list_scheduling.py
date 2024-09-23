@@ -110,12 +110,14 @@ def process_file(file_path):
                 if (len(parts) != 5):
                     raise ValueError(f"Error in line {line_num}: too many arguments")
                 
+                # operations name must starts with letter 'u'
                 if (not parts[0].startswith("u")):
                     raise ValueError(f"Error in line {line_num}: operation {parts[0]} must start with the letter 'u")
                 
                 if (not parts[1] == ":="):
                     raise ValueError(f"Error in line {line_num}: operation misspelled ")
                 
+                # check allowed types of operation
                 if (not parts[3] in ['+', '-', '*', '/']):
                     raise ValueError(f"Error in line {line_num}: operation allowed are only + - * /")
 
@@ -125,7 +127,6 @@ def process_file(file_path):
                     array_operations.append(new_operation)
         
         return array_operations
-
 
     except FileNotFoundError:
         print(f"Error: {file_path} does not exists")
@@ -150,7 +151,7 @@ def setup_parser() -> argparse.Namespace:
 
 def check_same_name(objects) -> str:
     """
-    Checks if an operation name (u0) has been entered twice
+    Checks if an operation name (u0) has been entered twice and if true, returns the name
     """
     for i in range(len(objects)):
         for j in range(i + 1, len(objects)):
@@ -164,6 +165,7 @@ if __name__ == "__main__":
 
     array_operations = process_file(args.file)
 
+    print("Operations loaded from the config file:")
     for operation in array_operations:
         print(str(operation))
 
