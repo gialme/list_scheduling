@@ -158,18 +158,69 @@ def check_same_name(objects) -> str:
             if objects[i].name == objects[j].name:
                 return objects[i].name
     
-    return True
+    return False
+
+def asap_scheduling(array_operations):
+    num_op = len(array_operations)
+    # done stores the clock cycle in wich an operation is performed
+    # both arrays are initialized with the value -1 (operation is still waiting)
+    done = [-1] * num_op
+    temp = [-1] * num_op
+
+    for clk in range(1, num_op+1):
+        for i in range(num_op):
+
+            if done[i] != -1: # the operation has already been performed in a previous clk cycle
+                continue
+            
+            index1 = array_operations[i].index1
+            index2 = array_operations[i].index2
+
+            if index1 == -1 and index2 == -1:
+                # both operands are input variabile -> the operation can already be done in this clock cycle
+                temp[i] = clk
+                continue
+
+            if index1 != -1 and done[index1] != -1:
+                if index2 != -1 and done[index2] != -1:
+                    # both operands have already been performed -> the operation can be done in this clk cycle
+                    temp[i] = clk
+                    continue
+                
+                elif index2 == -1:
+                    # op1 is done and op2 is an input variable -> the operation can be done in this clk cycle
+                    temp[i] = clk
+                    continue
+
+            if index1 == -1 and index2 != -1 and done[index2] != -1:
+                # op1 is an input variable and op2 is done -> the operation can be done in this clk cycle
+                temp[i] = clk
+                continue
+            
+        if done == temp:
+            # no changes in the last clk cycle, i can exit
+            clk -= 1
+            break
+
+        # update the done array after every clk cycle
+        done = temp.copy()
+    
+    return done
 
 if __name__ == "__main__":
     args = setup_parser()
 
     array_operations = process_file(args.file)
 
-    print("Operations loaded from the config file:")
-    for operation in array_operations:
-        print(str(operation))
-
     duplicate_name = check_same_name(array_operations)
 
     if (duplicate_name):
         raise ValueError(f"Error. Operation {duplicate_name} has been found twice")
+
+    print("Operations loaded from the config file:")
+    for operation in array_operations:
+        print(str(operation))
+
+    asap_schedule = asap_scheduling(array_operations)
+
+    print("ASAP scheduling: ", asap_schedule)
