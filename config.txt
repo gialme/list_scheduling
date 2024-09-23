@@ -1,0 +1,5 @@
+# config example:
+# u0 := a + b
+u0 := a + b
+u1 := c + d
+u2 := e + f
