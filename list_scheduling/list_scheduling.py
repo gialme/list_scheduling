@@ -98,7 +98,7 @@ def process_file(file_path):
             for line_num, line in enumerate(file, start=1):
 
                 # remove leading and trailing whitespace
-                line.strip()
+                line = line.strip()
 
                 # ignore comments and empty lines
                 if (line.startswith('#') or not line):
@@ -107,12 +107,12 @@ def process_file(file_path):
                 parts = line.split(" ")
 
                 # every line must contain 5 elements:
-                if (len(parts) != 5):
+                if (len(parts) > 5):
                     raise ValueError(f"Error in line {line_num}: too many arguments")
                 
                 # operations name must starts with letter 'u'
                 if (not parts[0].startswith("u")):
-                    raise ValueError(f"Error in line {line_num}: operation {parts[0]} must start with the letter 'u")
+                    raise ValueError(f"Error in line {line_num}: operation {parts[0]} must start with the letter 'u'")
                 
                 if (not parts[1] == ":="):
                     raise ValueError(f"Error in line {line_num}: operation misspelled ")
@@ -161,6 +161,9 @@ def check_same_name(objects) -> str:
     return False
 
 def asap_scheduling(array_operations):
+    """
+    returns the clock cycle number in which every operation is performed through an ASAP scheduling
+    """
     num_op = len(array_operations)
     # done stores the clock cycle in wich an operation is performed
     # both arrays are initialized with the value -1 (operation is still waiting)
@@ -207,6 +210,42 @@ def asap_scheduling(array_operations):
     
     return done
 
+def alap_scheduling(array_operations, asap_schedule):
+    """
+    returns the clock cycle number in which every operation is performed through an ALAP scheduling
+    """
+    num_op = len(array_operations)
+
+    # init done array
+    done = [-1] * num_op
+
+    # search for the clock max in the asap schedule
+    clk_max = max(asap_schedule)
+    # search for the index of the last operation in the asap schedule
+    pos = asap_schedule.index(clk_max)
+    # the last operation in asap is also the last operation in alap
+    done[pos] = clk_max
+
+    temp = done.copy()
+
+    # starting from clk-1 and proceed backwards
+    for clk in range(clk_max - 1, 0, -1):
+        for i in range(num_op):
+            if done[i] == clk + 1:
+                # pick the the index of the two operands
+                index1 = array_operations[i].index1
+                index2 = array_operations[i].index2
+
+                # if op1 and op2 are NOT input variable -> schedule them for the current clk cycle
+                if index1 != -1:
+                    temp[index1] = clk
+                if index2 != -1:
+                    temp[index2] = clk
+
+        done = temp.copy()
+
+    return done
+
 if __name__ == "__main__":
     args = setup_parser()
 
@@ -224,3 +263,7 @@ if __name__ == "__main__":
     asap_schedule = asap_scheduling(array_operations)
 
     print("ASAP scheduling: ", asap_schedule)
+
+    alap_schedule = alap_scheduling(array_operations, asap_schedule)
+
+    print("ALAP scheduling: ", alap_schedule)
