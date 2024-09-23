@@ -28,49 +28,25 @@ class Operation:
     def name(self):
         return self._name
     
-    @name.setter
-    def name(self, name:str):
-        self._name = name
-    
     @property
     def type(self):
         return self._type
-    
-    @type.setter
-    def type(self, type:str):
-        self._type = type
     
     @property
     def input1(self):
         return self._input1
     
-    @input1.setter
-    def input1(self, input1:str):
-        self._input1 = input1
-    
     @property
     def input2(self):
         return self._input2
-    
-    @input2.setter
-    def input2(self, input2:str):
-        self._input2 = input2
     
     @property
     def index1(self):
         return self._index1
     
-    @index1.setter
-    def index1(self, index1:int):
-        self._index1 = index1
-    
     @property
     def index2(self):
         return self._index2
-    
-    @index2.setter
-    def index2(self, index2:int):
-        self._index2 = index2
     
     def __str__(self):
         return f"{self.name} := {self.input1} {self.type} {self.input2}"
