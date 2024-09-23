@@ -246,6 +246,122 @@ def alap_scheduling(array_operations, asap_schedule):
 
     return done
 
+def priority_function(array_operations, asap_schedule, alap_schedule):
+    """
+    Establishes the scheduling priority for the operations using the formula (b - t + 1)
+    where b: ALAP, t: ASAP
+    """
+    num_op = len(array_operations)
+
+    priority = [0] * num_op
+
+    for i in range(num_op):
+        priority[i] = alap_schedule[i] - asap_schedule[i] + 1
+
+    return priority
+
+def priority_scheduling(array_operations, asap_schedule, alap_schedule, n_mult, n_adder):
+    num_op = len(array_operations)
+    
+    ready = [0] * num_op
+    temp = [0] * num_op
+    scheduling = [-1] * num_op
+    all_done = [2] * num_op
+
+    add = [-1] * num_op
+    mult = [-1] * num_op
+
+    # call the priority function
+    priority = priority_function(array_operations, asap_schedule, alap_schedule)
+
+    # done and temp vectors have the values:
+    # 0 if the corresponding operation is not ready
+    # 1 if it's ready but not yet executed
+    # 2 if it's executed
+
+    for clk in range(1, num_op + 1):
+        for i in range(num_op):
+            # search for ready operations for this clk cycle 
+            # operation is ready if the inputs are -1 (input variable) or 2
+            if ready[i] != 0:
+                continue
+            
+            index1 = array_operations[i].index1
+            index2 = array_operations[i].index2
+
+            if index1 == -1 and index2 == -1:
+                # if conditions are met, changes its status in ready (1)
+                temp[i] = 1
+                continue
+            
+            if index1 != 1 and ready[index1] == 2:
+                if index2 == -1 or (index2 != -1 and ready[index2] == 2):
+                    temp[i] = 1
+                    continue
+
+            if index2 != -1 and ready[index2] == 2 and index1 == -1:
+                temp[i] = 1
+                continue
+
+        ready = temp.copy()
+
+        print("clk: ", clk)
+        print("ready operations: ", ready)
+
+        # init adder and multiplier queues
+        add = [-1] * n_adder
+        mult = [-1] * n_mult
+
+        # search for ready additions and put them in the add[] vector
+        for i in range(n_adder):
+            for j in range(num_op):
+                if array_operations[j].type == '+' and ready[j] == 1:
+                    if j in add:
+                        # operation is already in the add[] vector, skip
+                        continue
+                    elif add[i] == -1:
+                        add[i] = j
+                    elif priority[add[i]] < priority[j]:
+                        # if another operation with higher priority is found, replace it
+                        add[i] = j
+        
+        print("adder: ", add)
+
+        # execute additions and update the done[] vector
+        for i in range(n_adder):
+            if add[i] != -1:
+                temp[add[i]] = 2
+                scheduling[add[i]] = clk
+
+        # search for ready multiplications
+        for i in range(n_mult):
+            for k in range(num_op):
+                if array_operations[j].type == '*' and ready[j] == 1:
+                    if j in mult:
+                        continue
+                    elif mult[i] == -1:
+                        mult[i] = j
+                    elif priority[mult[i]] < priority[j]:
+                        mult[i] = j
+
+        print("multiplier: ", mult)
+
+        # execute multiplication and update the done[] vector
+        for i in range(n_mult):
+            if mult[i] != -1:
+                temp[mult[i]] = 2
+                scheduling[mult[i]] = clk
+
+        # update the ready[] vector
+        ready = temp.copy()
+
+        # check if all operation are done. if true, exit the loop
+        if all(x == 2 for x in ready):
+            break
+
+    return scheduling
+
+
 if __name__ == "__main__":
     args = setup_parser()
 
@@ -267,3 +383,6 @@ if __name__ == "__main__":
     alap_schedule = alap_scheduling(array_operations, asap_schedule)
 
     print("ALAP scheduling: ", alap_schedule)
+
+    print("List scheduling:")
+    list_schedule = priority_scheduling(array_operations, asap_schedule, alap_schedule, args.nmult, args.nadd)
