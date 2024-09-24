@@ -87,10 +87,13 @@ def extract_index(input: str) -> int:
         The extracted numerical index if the input matches the pattern. 
         Returns -1 if the input does not match the pattern.
     """
+
+    # regular expression pattern to match the expected format
     pattern = r"^u(\d+)$"
     match = re.match(pattern, input)
 
     if match:
+        # extract the captured group containing the integer using group(1)
         return int(match.group(1))
     else:
         return -1
@@ -135,7 +138,8 @@ def process_file(file_path):
                 # ignore comments and empty lines
                 if (line.startswith('#') or not line):
                     continue
-
+                
+                # split the line into parts
                 parts = line.split(" ")
 
                 # every line must contain 5 elements:
@@ -146,22 +150,23 @@ def process_file(file_path):
                 if (not parts[0].startswith("u")):
                     raise ValueError(f"Error in line {line_num}: operation {parts[0]} must start with the letter 'u'")
                 
+                # the delimiter between the operation name and the operands must be ":="
                 if (not parts[1] == ":="):
                     raise ValueError(f"Error in line {line_num}: operation misspelled ")
                 
                 # check allowed types of operation
                 if (not parts[3] in ['+', '-', '*', '/']):
                     raise ValueError(f"Error in line {line_num}: operation allowed are only + - * /")
-
+                
+                # create a new Operation object
                 new_operation = Operation(parts[0], parts[3], parts[2], parts[4])
-
                 if new_operation:
                     array_operations.append(new_operation)
         
         return array_operations
 
     except FileNotFoundError:
-        print(f"Error: {file_path} does not exists")
+        print(f"Error. File {file_path} non found")
 
 def setup_parser() -> argparse.Namespace:
     """
@@ -248,7 +253,7 @@ def asap_scheduling(array_operations):
     This means the first two operations are scheduled in cycle 1, and the third operation is scheduled in cycle 2.
     """
     num_op = len(array_operations)
-    # done stores the clock cycle in wich an operation is performed
+    # done tracks the clock cycle in wich an operation is performed
     # both arrays are initialized with the value -1 (operation is still waiting)
     done = [-1] * num_op
     temp = [-1] * num_op
@@ -259,32 +264,35 @@ def asap_scheduling(array_operations):
             if done[i] != -1: # the operation has already been performed in a previous clk cycle
                 continue
             
+            # Get the input operand indexes
             index1 = array_operations[i].index1
             index2 = array_operations[i].index2
 
+            # check if both operands are input variable
+            # if True, the operation can be done in this clock cycle
             if index1 == -1 and index2 == -1:
-                # both operands are input variabile -> the operation can already be done in this clock cycle
                 temp[i] = clk
                 continue
 
+            # Check if the first operand is available
             if index1 != -1 and done[index1] != -1:
                 if index2 != -1 and done[index2] != -1:
-                    # both operands have already been performed -> the operation can be done in this clk cycle
+                    # both operands are available -> schedule now
                     temp[i] = clk
                     continue
                 
                 elif index2 == -1:
-                    # op1 is done and op2 is an input variable -> the operation can be done in this clk cycle
+                    # op1 is done and op2 is an input variable -> scheule now
                     temp[i] = clk
                     continue
 
             if index1 == -1 and index2 != -1 and done[index2] != -1:
-                # op1 is an input variable and op2 is done -> the operation can be done in this clk cycle
+                # op1 is an input variable and op2 is done -> schedule now
                 temp[i] = clk
                 continue
             
         if done == temp:
-            # no changes in the last clk cycle, i can exit
+            # no changes in the last clk cycle, so break the loop
             clk -= 1
             break
 
@@ -315,7 +323,6 @@ def alap_scheduling(array_operations, asap_schedule):
     list[int]
         A list of integers where each index represents the clock cycle at which the corresponding operation is scheduled in ALAP.
         The list will contain the value 'n' at the operation's index, indicating that the operation is scheduled in cycle 'n'.
-
     """
     num_op = len(array_operations)
 
@@ -339,7 +346,7 @@ def alap_scheduling(array_operations, asap_schedule):
                 index1 = array_operations[i].index1
                 index2 = array_operations[i].index2
 
-                # if op1 and op2 are NOT input variable -> schedule them for the current clk cycle
+                # if op1 and op2 are NOT input variable -> schedule the operation now
                 if index1 != -1:
                     temp[index1] = clk
                 if index2 != -1:
@@ -349,7 +356,7 @@ def alap_scheduling(array_operations, asap_schedule):
 
     return done
 
-def priority_function(array_operations, asap_schedule, alap_schedule):
+def priority_function(asap_schedule, alap_schedule, num_op):
     """
     Computes the scheduling priority for each operation based on the difference between its ALAP and ASAP schedules.
 
@@ -362,27 +369,24 @@ def priority_function(array_operations, asap_schedule, alap_schedule):
 
     Parameters:
     -----------
-    array_operations : list[Operation]
-        A list of 'Operation' objects.
-    
     asap_schedule : list[int]
         A list of integers representing the clock cycle for each operation in the ASAP scheduling.
 
     alap_schedule : list[int]
         A list of integers representing the clock cycle for each operation in the ALAP scheduling.
 
+    num_op : int
+        The number of the operations.
+
     Returns:
     --------
     list[int]
         A list of integers representing the priority of each operation. The priority is computed as the difference 
         between the ALAP and ASAP schedules + 1, where smaller differences indicate higher scheduling flexibility.
-
-
     """
-    num_op = len(array_operations)
-
     priority = [0] * num_op
 
+    # priority is computed as (b-t+1) for each operation
     for i in range(num_op):
         priority[i] = alap_schedule[i] - asap_schedule[i] + 1
 
@@ -424,48 +428,52 @@ def priority_scheduling(array_operations, asap_schedule, alap_schedule, n_mult, 
     """
     num_op = len(array_operations)
     
+    # init state variables
     ready = [0] * num_op
     temp = [0] * num_op
     scheduling = [-1] * num_op
-    all_done = [2] * num_op
 
     add = [-1] * num_op
     mult = [-1] * num_op
 
-    # call the priority function
-    priority = priority_function(array_operations, asap_schedule, alap_schedule)
+    # get operation priorities based on ASAP and ALAP schedules
+    priority = priority_function(asap_schedule, alap_schedule, num_op)
 
-    # done and temp vectors have the values:
+    # 'done' and 'temp' vectors have the values:
     # 0 if the corresponding operation is not ready
     # 1 if it's ready but not yet executed
     # 2 if it's executed
 
     for clk in range(1, num_op + 1):
         for i in range(num_op):
-            # search for ready operations for this clk cycle 
-            # operation is ready if the inputs are -1 (input variable) or 2
+            # search for ready operations in this clk cycle 
+            # operation is ready if the inputs are -1 (input variable) or 2 (operands available)
             if ready[i] != 0:
                 continue
             
             index1 = array_operations[i].index1
             index2 = array_operations[i].index2
 
+            # check if both operands are input variable (index = -1)
             if index1 == -1 and index2 == -1:
-                # if conditions are met, changes its status in ready (1)
+                # if conditions are met, changes its status to ready (1)
                 temp[i] = 1
                 continue
             
-            if index1 != 1 and ready[index1] == 2:
+            # check if op1 is done and op2 is either an input variable or done
+            if index1 != -1 and ready[index1] == 2:
                 if index2 == -1 or (index2 != -1 and ready[index2] == 2):
                     temp[i] = 1
                     continue
 
+            # check if op1 is an input variable and op2 is done
             if index2 != -1 and ready[index2] == 2 and index1 == -1:
                 temp[i] = 1
                 continue
 
         ready = temp.copy()
 
+        # print current clock cycle and ready operations
         print("clk: ", clk)
         print("ready operations: ", ready)
 
@@ -473,28 +481,30 @@ def priority_scheduling(array_operations, asap_schedule, alap_schedule, n_mult, 
         add = [-1] * n_adder
         mult = [-1] * n_mult
 
-        # search for ready additions and put them in the add[] vector
+        # assign operations to adders and multipliers based on priority
+        # adders
         for i in range(n_adder):
             for j in range(num_op):
                 if array_operations[j].type == '+' and ready[j] == 1:
                     if j in add:
-                        # operation is already in the add[] vector, skip
+                        # operation j is already in the add[] vector, skip
                         continue
                     elif add[i] == -1:
+                        # if one adders is empty, assign the operation j
                         add[i] = j
                     elif priority[add[i]] < priority[j]:
                         # if another operation with higher priority is found, replace it
                         add[i] = j
         
-        print("adder: ", add)
+        print("adders: ", add)
 
-        # execute additions and update the done[] vector
+        # execute additions and mark the corresponding operations as scheduled (2)
         for i in range(n_adder):
             if add[i] != -1:
                 temp[add[i]] = 2
                 scheduling[add[i]] = clk
 
-        # search for ready multiplications
+        # multipliers
         for i in range(n_mult):
             for j in range(num_op):
                 if array_operations[j].type == '*' and ready[j] == 1:
@@ -505,9 +515,9 @@ def priority_scheduling(array_operations, asap_schedule, alap_schedule, n_mult, 
                     elif priority[mult[i]] < priority[j]:
                         mult[i] = j
 
-        print("multiplier: ", mult)
+        print("multipliers: ", mult)
 
-        # execute multiplication and update the done[] vector
+        # execute multiplication and mark the corresponding operations as scheduled (2)
         for i in range(n_mult):
             if mult[i] != -1:
                 temp[mult[i]] = 2
@@ -516,36 +526,44 @@ def priority_scheduling(array_operations, asap_schedule, alap_schedule, n_mult, 
         # update the ready[] vector
         ready = temp.copy()
 
-        # check if all operation are done. if true, exit the loop
+        # check if all operation are marked as done. if true, exit the loop
         if all(x == 2 for x in ready):
             break
 
     return scheduling
 
 def main():
+    """
+    Main function
+    """
     args = setup_parser()
 
     array_operations = process_file(args.file)
 
+    # check for duplicate names among the operations
     duplicate_name = check_same_name(array_operations)
-
     if (duplicate_name):
         raise ValueError(f"Error. Operation {duplicate_name} has been found twice")
 
+    # print all the operations loaded
     print("Operations loaded from the config file:")
     for operation in array_operations:
         print(str(operation))
 
-    asap_schedule = asap_scheduling(array_operations)
 
+    # perform ASAP scheduling and print the vector
+    asap_schedule = asap_scheduling(array_operations)
     print("ASAP scheduling: ", asap_schedule)
 
-    alap_schedule = alap_scheduling(array_operations, asap_schedule)
 
+    # perform ALAP scheduling and print the vector
+    alap_schedule = alap_scheduling(array_operations, asap_schedule)
     print("ALAP scheduling: ", alap_schedule)
 
+    # perform List scheduling
     print("List scheduling:")
     list_schedule = priority_scheduling(array_operations, asap_schedule, alap_schedule, args.nmult, args.nadd)
+    print(list_schedule)
 
 if __name__ == "__main__":
     main()
