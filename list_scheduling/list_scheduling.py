@@ -1,20 +1,36 @@
 import argparse
 import re
 
-
-# class Operation is defined with:
-# name: operation name (eg. u0, u1, u2)
-# type: +, -, *, /
-# input1, input2: the two operands
-# index1, index2: their index (-1 if it's an input variable)
 class Operation:
+    """
+    Represents a mathematical operation involving two operands and a specific operation type.
+    """
     def __init__(self, name: str, type: str, input1: str, input2: str):
+        """
+        Init function.
+
+        Parameters:
+        -----------
+        _name : str
+            The name of the operation. Must be "u<number>" (e.g., 'u0', 'u1', 'u2').
+        _type : str
+            The type of the elementary operation, represented as either '+' or '*' 
+            based on whether the operation is an addition/subtraction or multiplication/division. 
+            If the operation is '+' or '-', the type is set to '+' (adder).
+            If the operation is '*' or '/', the type is set to '*' (multiplier).
+        _input1 : str
+            The first operand for the operation, which could be an input variable or a previous operation.
+        _input2 : str
+            The second operand for the operation, which could be an input variable or a previous operation.
+        _index1 : int
+            The index of the first operand, extracted from 'input1'. If it is an input variable, the index is set to -1.
+        _index2 : int
+            The index of the second operand, extracted from 'input2'. If it is an input variable, the index is set to -1.
+        """
         self._name = name
         self._input1 = input1
         self._input2 = input2
 
-        # if the type of operation is + or - -> adder
-        # else if the type is * or / -> multiplier
         if (type == '+' or type == '-'):
             self._type = "+"
         else:
@@ -23,7 +39,7 @@ class Operation:
         self._index1 = extract_index(input1)
         self._index2 = extract_index(input2)
     
-    # getters and setters
+    # getters
     @property
     def name(self):
         return self._name
@@ -53,12 +69,27 @@ class Operation:
     
 def extract_index(input: str) -> int:
     """
-    Exctracts the index from an operand
+    Extracts the index from an operand string that follows a specific pattern.
+
+    The function expects the input to be in the format "u<number>" (e.g., "u12"). 
+    If the input matches this format, the function returns the numerical part of the string as an integer.
+    If the input does not match this pattern (e.g., "a"), the function returns -1.
+
+    Parameters:
+    -----------
+    input : str
+        The operand string from which the index is to be extracted. 
+        It is expected to be in the format "u<number>".
+
+    Returns:
+    --------
+    int
+        The extracted numerical index if the input matches the pattern. 
+        Returns -1 if the input does not match the pattern.
     """
     pattern = r"^u(\d+)$"
     match = re.match(pattern, input)
 
-    # if the input is "u12" the index is 12, else (eg. the input is "a") its is index -1
     if match:
         return int(match.group(1))
     else:
@@ -66,7 +97,32 @@ def extract_index(input: str) -> int:
 
 def process_file(file_path):
     """
-    Parses the config file and returns an array with all the operations read from the file
+    Parses a configuration file and returns a list of operations.
+
+    The function reads a file line by line, where each line describes a mathematical operation. 
+    It ignores comments (lines starting with '#') and empty lines. Each valid line must follow 
+    the format: "uX := operand1 operator operand2", where:
+    - 'uX' is the name of the operation (must start with 'u'),
+    - ':=' is a required delimiter,
+    - 'operand1' and 'operand2' are the two operands,
+    - 'operator' is one of '+', '-', '*', or '/'.
+
+    Parameters:
+    -----------
+    file_path : str
+        The path to the configuration file to be processed.
+
+    Returns:
+    --------
+    list[Operation]
+        A list of 'Operation' objects created from the valid lines in the file.
+
+    Raises:
+    -------
+    FileNotFoundError
+        If the file cannot be found at the specified path.
+    ValueError
+        If a line does not conform to the expected format or contains invalid arguments.
     """
     try:
         with open(file_path, 'r') as file:
@@ -109,7 +165,21 @@ def process_file(file_path):
 
 def setup_parser() -> argparse.Namespace:
     """
-    Parses the arguments
+    Sets up and parses command-line arguments for the list scheduling algorithm.
+
+    Returns:
+    --------
+    argparse.Namespace
+        A namespace object containing the parsed arguments as attributes.
+
+    Arguments:
+    ----------
+    - file : str
+        The path to the configuration file (required).
+    - --nmult : int
+        The number of multipliers available for scheduling (required).
+    - --nadd : int
+        The number of adders available for scheduling (required).
     """
     parser = argparse.ArgumentParser (
         prog='list_scheduling',
@@ -120,14 +190,28 @@ def setup_parser() -> argparse.Namespace:
     parser.add_argument("file", type=str, help="path to config file")
 
     # arguments for numbers of multipliers and adders
-    parser.add_argument("--nmult", type=int, help="Number of multipliers available")
-    parser.add_argument("--nadd", type=int, help="Number of adders available")
+    parser.add_argument("--nmult", type=int, help="Number of multipliers available", required=True)
+    parser.add_argument("--nadd", type=int, help="Number of adders available", required=True)
     
     return parser.parse_args()
 
-def check_same_name(objects) -> str:
+def check_same_name(objects):
     """
-    Checks if an operation name (u0) has been entered twice and if true, returns the name
+    Checks if any operation name appears more than once in the provided list of objects.
+
+    This function iterates through a list of objects and checks if any two objects share the same name.
+    If a duplicate name is found, it returns that name.
+    If no duplicates are found, it returns 'False'.
+
+    Parameters:
+    -----------
+    objects : list
+        A list of objects, where each object is expected to have a 'name' attribute.
+
+    Returns:
+    --------
+    str or bool
+        The name of the duplicate operation if found. Returns 'False' if no duplicates are found.
     """
     for i in range(len(objects)):
         for j in range(i + 1, len(objects)):
@@ -138,7 +222,30 @@ def check_same_name(objects) -> str:
 
 def asap_scheduling(array_operations):
     """
-    returns the clock cycle number in which every operation is performed through an ASAP scheduling
+    Performs ASAP (As Soon As Possible) scheduling on a list of operations and returns the clock cycle number in which 
+    each operation is performed.
+
+    This function simulates the ASAP scheduling algorithm, which schedules operations as early as possible, 
+    taking into account data dependencies. Operations can only be scheduled when their input operands are available 
+    (either as inputs or the results of previously scheduled operations).
+
+    Parameters:
+    -----------
+    array_operations : list[Operation]
+        A list of 'Operation' objects, read from the config file, where each operation specifies its dependencies via 'index1' and 'index2'.
+        
+    Returns:
+    --------
+    list[int]
+        A list of integers where each index represents the clock cycle at which the corresponding operation is scheduled.
+        If an operation is scheduled in cycle 'n', the list will contain the value 'n' at that operation's index.
+
+    Example:
+    --------
+    >>> asap_scheduling(array_operations)
+    [1, 1, 2]
+    
+    This means the first two operations are scheduled in cycle 1, and the third operation is scheduled in cycle 2.
     """
     num_op = len(array_operations)
     # done stores the clock cycle in wich an operation is performed
@@ -188,7 +295,27 @@ def asap_scheduling(array_operations):
 
 def alap_scheduling(array_operations, asap_schedule):
     """
-    returns the clock cycle number in which every operation is performed through an ALAP scheduling
+    Performs ALAP (As Late As Possible) scheduling on a list of operations, based on the given ASAP schedule, 
+    and returns the clock cycle number in which each operation is performed.
+
+    ALAP scheduling schedules operations as late as possible while still satisfying data dependencies. 
+    It works backwards from the latest operation (determined from the ASAP schedule) and schedules earlier operations 
+    based on when their results are needed by dependent operations.
+
+    Parameters:
+    -----------
+    array_operations : list[Operation]
+        A list of 'Operation' objects, where each operation specifies its dependencies via 'index1' and 'index2'.
+    
+    asap_schedule : list[int]
+        The clock cycle numbers from the ASAP scheduling result.
+
+    Returns:
+    --------
+    list[int]
+        A list of integers where each index represents the clock cycle at which the corresponding operation is scheduled in ALAP.
+        The list will contain the value 'n' at the operation's index, indicating that the operation is scheduled in cycle 'n'.
+
     """
     num_op = len(array_operations)
 
@@ -224,8 +351,33 @@ def alap_scheduling(array_operations, asap_schedule):
 
 def priority_function(array_operations, asap_schedule, alap_schedule):
     """
-    Establishes the scheduling priority for the operations using the formula (b - t + 1)
-    where b: ALAP, t: ASAP
+    Computes the scheduling priority for each operation based on the difference between its ALAP and ASAP schedules.
+
+    The priority is established using the formula: (b - t + 1), where:
+    - 'b' is the ALAP schedule (the latest clock cycle in which the operation can be performed),
+    - 't' is the ASAP schedule (the earliest clock cycle in which the operation can be performed).
+
+    Higher priority values correspond to operations that have a smaller window between their ASAP and ALAP schedules, 
+    indicating they should be scheduled earlier.
+
+    Parameters:
+    -----------
+    array_operations : list[Operation]
+        A list of 'Operation' objects.
+    
+    asap_schedule : list[int]
+        A list of integers representing the clock cycle for each operation in the ASAP scheduling.
+
+    alap_schedule : list[int]
+        A list of integers representing the clock cycle for each operation in the ALAP scheduling.
+
+    Returns:
+    --------
+    list[int]
+        A list of integers representing the priority of each operation. The priority is computed as the difference 
+        between the ALAP and ASAP schedules + 1, where smaller differences indicate higher scheduling flexibility.
+
+
     """
     num_op = len(array_operations)
 
@@ -237,6 +389,39 @@ def priority_function(array_operations, asap_schedule, alap_schedule):
     return priority
 
 def priority_scheduling(array_operations, asap_schedule, alap_schedule, n_mult, n_adder):
+    """
+    Schedules operations based on priority using the Priority Scheduling algorithm, considering both 
+    ALAP and ASAP schedules, as well as the number of available adders and multipliers.
+
+    This function implements a priority scheduling mechanism that selects operations to execute based 
+    on their priority, which is determined by their ALAP and ASAP schedules. The function prioritizes 
+    operations with a smaller window between their ASAP and ALAP schedules and schedules them based on 
+    the availability of computational resources (wich are adders and multipliers).
+    It also displays on each clock cycle which operations are performed by the assigned number of
+    adders and multipliers.
+
+    Parameters:
+    -----------
+    array_operations : list[Operation]
+        A list of 'Operation' objects, which contain information about each operation's dependencies and types.
+    
+    asap_schedule : list[int]
+        A list of integers representing the earliest clock cycles in which each operation can be executed (from the ASAP scheduling).
+    
+    alap_schedule : list[int]
+        A list of integers representing the latest clock cycles in which each operation can be executed (from the ALAP scheduling).
+    
+    n_mult : int
+        The number of multipliers available for scheduling operations (command line argument).
+    
+    n_adder : int
+        The number of adders available for scheduling operations (command line argument).
+
+    Returns:
+    --------
+    list[int]
+        A list of integers where each index corresponds to the clock cycle in which the respective operation is scheduled.
+    """
     num_op = len(array_operations)
     
     ready = [0] * num_op
@@ -337,8 +522,7 @@ def priority_scheduling(array_operations, asap_schedule, alap_schedule, n_mult, 
 
     return scheduling
 
-
-if __name__ == "__main__":
+def main():
     args = setup_parser()
 
     array_operations = process_file(args.file)
@@ -362,3 +546,6 @@ if __name__ == "__main__":
 
     print("List scheduling:")
     list_schedule = priority_scheduling(array_operations, asap_schedule, alap_schedule, args.nmult, args.nadd)
+
+if __name__ == "__main__":
+    main()
