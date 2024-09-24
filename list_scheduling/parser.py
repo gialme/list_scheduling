@@ -1,5 +1,5 @@
 import argparse
-from operation import Operation
+from list_scheduling.operation import Operation
 
 def process_file(file_path):
     """

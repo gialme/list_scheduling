@@ -1,4 +1,4 @@
-from utils import priority_function
+from list_scheduling.utils import priority_function
 
 def asap_scheduling(array_operations):
     """

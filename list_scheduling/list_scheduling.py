@@ -1,7 +1,6 @@
-from operation import Operation
-from parser import setup_parser, process_file
-from schedulers import asap_scheduling, alap_scheduling, priority_scheduling
-from utils import check_same_name
+from list_scheduling.parser import setup_parser, process_file
+from list_scheduling.schedulers import asap_scheduling, alap_scheduling, priority_scheduling
+from list_scheduling.utils import check_same_name
 
 def main(args):
     """
