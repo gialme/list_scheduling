@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "list_scheduling"
+version = "0.0.1"
+dependencies = []
+requires-python = ">=3.8"
+authors = [
+  {name = "Enrico Talmelli", email = "enrico.talmelli@gmail.com"}
+]
+maintainers = [
+  {name = "Enrico Talmelli", email = "enrico.talmelli@gmail.com"}
+]
+description = "Implementation of the list scheduling algorithm with a constrained number of adders and multipliers"
+readme = "README.md"
+license = {file = "LICENSE"}
+
+[project.scripts]
+list_scheduling = "list_scheduling:main"
