@@ -1,0 +1,14 @@
+# Start from the official Python image
+FROM python:latest
+
+# Create a directory for the application
+WORKDIR /app
+
+# Copy the .whl file into the container
+COPY ./dist/list_scheduling-0.0.1-py3-none-any.whl /app/
+
+# Install the package using pip
+RUN python -m pip install list_scheduling-0.0.1-py3-none-any.whl
+
+# Set the entrypoint to execute the package
+ENTRYPOINT ["list_scheduling"]
