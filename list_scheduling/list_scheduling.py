@@ -12,7 +12,7 @@ def main(args):
 
     # check for duplicate names among the operations
     duplicate_name = check_same_name(array_operations)
-    if (duplicate_name):
+    if duplicate_name:
         raise ValueError(f"Error. Operation {duplicate_name} has been found twice")
 
     # print all the operations loaded
@@ -37,5 +37,5 @@ def main(args):
     return list_schedule
 
 if __name__ == "__main__":
-    list_schedule = main(setup_parser())
-    print(list_schedule)
+    list_scheduled = main(setup_parser())
+    print(list_scheduled)

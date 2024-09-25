@@ -34,7 +34,7 @@ class ScheduleOperation:
         self._input1 = input1
         self._input2 = input2
 
-        if (type_op in ('+', '-')):
+        if type_op in ('+', '-'):
             self._type_op = "+"
         else:
             self._type_op = "*"
