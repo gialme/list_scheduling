@@ -56,8 +56,8 @@ def process_file(file_path):
                 parts = line.split(" ")
 
                 # every line must contain 5 elements:
-                if len(parts) > 5:
-                    raise ValueError(f"Error in line {line_num}: too many arguments")
+                if len(parts) != 5:
+                    raise ValueError(f"Error in line {line_num}: operation misspelled ")
 
                 # operations name must starts with letter 'u'
                 if not parts[0].startswith("u"):

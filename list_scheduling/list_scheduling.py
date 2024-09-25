@@ -10,8 +10,6 @@ def main(args):
     """
     Main function
     """
-    #args = setup_parser()
-
     array_operations = process_file(args.file)
 
     # check for duplicate names among the operations

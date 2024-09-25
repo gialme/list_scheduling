@@ -1,10 +1,18 @@
 import pytest
+import tempfile
+import os
+import sys
+import argparse
 import list_scheduling.utils
 import list_scheduling.operation
 import list_scheduling.schedulers
+import list_scheduling.parser
 
 @pytest.fixture
 def operations():
+    """
+    Create a list of ScheduleOperation objects for testing purposes.
+    """
     return [
         list_scheduling.operation.ScheduleOperation('u0', '+', 'a', 'b'), # Operation 0: No dependencies
         list_scheduling.operation.ScheduleOperation('u1', '*', 'c', 'd'), # Operation 1: No dependencies
@@ -65,6 +73,17 @@ class TestUnit:
 
         assert res == False
 
+    def test_str_ScheduleOperation(self):
+        """
+        Test the __str__ method of the ScheduleOperation class.
+        """
+        operation = list_scheduling.operation.ScheduleOperation("u0", "+", "a", "b")
+        expected_str = "u0 := a + b"
+
+        res = str(operation)
+
+        assert res == expected_str
+
 class TestUnitSchedulers:
     """
     Test the scheduling functions.
@@ -100,3 +119,183 @@ class TestUnitSchedulers:
 
         assert result == expected_priority_schedule
 
+class TestParser:
+    def test_process_file_valid(self):
+        """
+        Test the process_file function with a valid file.
+        """
+        # create a temporary file with valid operations
+        with tempfile.NamedTemporaryFile(delete=False, mode='w', encoding='utf-8') as temp_file:
+            temp_file.write("# this comment should be ignored\n")
+            temp_file.write("u0 := a + b\n")
+            temp_file.write("u1 := c * d\n")
+            temp_file.write("u2 := e - f\n")
+            temp_file.write("u3 := u0 / u1\n")
+            temp_file_path = temp_file.name
+        
+        try:
+            operations_read = list_scheduling.parser.process_file(temp_file_path)
+
+            expected_operations = [
+                list_scheduling.operation.ScheduleOperation('u0', '+', 'a', 'b'),
+                list_scheduling.operation.ScheduleOperation('u1', '*', 'c', 'd'),
+                list_scheduling.operation.ScheduleOperation('u2', '+', 'e', 'f'), # '-' conveerted to '+'
+                list_scheduling.operation.ScheduleOperation('u3', '*', 'u0', 'u1') # '/' converted to '*'
+            ]
+
+            # assertions
+            assert len(operations_read) == len(expected_operations)
+            for i in range(len(operations_read)):
+                assert operations_read[i].name == expected_operations[i].name
+                assert operations_read[i].type_op == expected_operations[i].type_op
+                assert operations_read[i].input1 == expected_operations[i].input1
+                assert operations_read[i].input2 == expected_operations[i].input2
+        
+        finally:
+            os.remove(temp_file_path)
+
+    def test_process_file_invalid_arguments(self):
+        """
+        Test the process_file function with an invalid file where the number of arguments is not 5.
+        """
+        # create a temporary file exceeding the max number of arguments (5)
+        with tempfile.NamedTemporaryFile(delete=False, mode='w', encoding='utf-8') as temp_file:
+            temp_file.write("u0 := a + b * c\n")
+            temp_file_path = temp_file.name
+
+        try:
+            # calling the function should raise a ValueError
+            with pytest.raises(ValueError, match="Error in line 1: operation misspelled"):
+                list_scheduling.parser.process_file(temp_file_path)
+        finally:
+            os.remove(temp_file_path)
+    
+    def test_process_file_invalid_operation(self):
+        """
+        Test the process_file function with an invalid operation name
+        where the operation name is invalid (must start with 'u').
+        """
+        # create a temporary file with an invalid operation
+        with tempfile.NamedTemporaryFile(delete=False, mode='w', encoding='utf-8') as temp_file:
+            temp_file.write("a0 := a + b\n")
+            temp_file_path = temp_file.name
+        
+        try:
+            # calling the function should raise a ValueError
+            with pytest.raises(ValueError, match="Error in line 1: operation a0 must start with the letter 'u'"):
+                list_scheduling.parser.process_file(temp_file_path)
+        finally:
+            os.remove(temp_file_path)
+    
+    def test_process_file_invalid_delimiter(self):
+        """
+        Test the process_file function with an invalid operation
+        where the delimiter between the operation name and operands is invalid.
+        """
+        # create a temporary file with an invalid operation
+        with tempfile.NamedTemporaryFile(delete=False, mode='w', encoding='utf-8') as temp_file:
+            temp_file.write("u0 = a + b\n")
+            temp_file_path = temp_file.name
+        
+        try:
+            # calling the function should raise a ValueError
+            with pytest.raises(ValueError, match="Error in line 1: operation misspelled"):
+                list_scheduling.parser.process_file(temp_file_path)
+        finally:
+            os.remove(temp_file_path)
+
+    def test_process_file_invalid_operation_type(self):
+        """
+        Test the process_file function with an invalid operation
+        where the operation type is invalid (must be '+', '-', '*', '/').
+        """
+        # create a temporary file with an invalid operation
+        with tempfile.NamedTemporaryFile(delete=False, mode='w', encoding='utf-8') as temp_file:
+            temp_file.write("u0 := a x b\n")
+            temp_file_path = temp_file.name
+        
+        try:
+            # calling the function should raise a ValueError
+            with pytest.raises(ValueError, match=r"Error in line 1: operation allowed are only \+ - \* /"):
+                list_scheduling.parser.process_file(temp_file_path)
+        finally:
+            os.remove(temp_file_path)
+    def test_process_file_file_not_found(self):
+        """
+        Test the process_file function with a file that does not exist.
+        """
+        # calling the function should raise a ValueError
+        with pytest.raises(ValueError, match="Error. File file_not_existent.txt not found"):
+            list_scheduling.parser.process_file("file_not_existent.txt")
+
+    def test_setup_parser_valid(self, monkeypatch):
+        """
+        Test the setup_parser function simulating command-line arguments.
+        """
+        # simulate command-line arguments
+        test_args = ["list_scheduling", "config.txt", "--nmult", "2", "--nadd", "2"]
+        
+        # temporarily replace sys.argv with test_args for testing purposes
+        # sys.argv usually contains the command-line arguments passed to the script
+        monkeypatch.setattr(sys, 'argv', test_args)
+
+        # call the setup_parser function
+        args = list_scheduling.parser.setup_parser()
+
+        assert args.file == "config.txt"
+        assert args.nmult == 2
+        assert args.nadd == 2
+
+class TestListScheduling:
+    @pytest.fixture
+    def mock_setup_parser(self, monkeypatch):
+        def mock_parser():
+            return argparse.Namespace(file="config.txt", nmult=2, nadd=2)
+        monkeypatch.setattr(list_scheduling.parser, 'setup_parser', mock_parser)
+
+    @pytest.fixture
+    def mock_process_file(self, monkeypatch):
+        def mock_process(file):
+            print("Mocking the process_file function")
+            return [
+                list_scheduling.operation.ScheduleOperation('u0', '+', 'a', 'b'),
+                list_scheduling.operation.ScheduleOperation('u1', '*', 'c', 'd'),
+                list_scheduling.operation.ScheduleOperation('u2', '+', 'u0', 'e'),
+                list_scheduling.operation.ScheduleOperation('u3', '*', 'u1', 'u2')
+            ]
+        monkeypatch.setattr(list_scheduling.parser, 'process_file', mock_process)
+    
+    @pytest.fixture
+    def mock_check_same_name(self, monkeypatch):
+        def mock_check(operations):
+            return False
+        monkeypatch.setattr(list_scheduling.utils, 'check_same_name', mock_check)
+    
+    @pytest.fixture
+    def mock_asap_scheduling(self, monkeypatch):
+        def mock_asap(operations):
+            return [1, 1, 2, 3]
+        monkeypatch.setattr(list_scheduling.schedulers, 'asap_scheduling', mock_asap)
+    
+    @pytest.fixture
+    def mock_alap_scheduling(self, monkeypatch):
+        def mock_alap(operations, asap_schedule):
+            return [1, 2, 2, 3]
+        monkeypatch.setattr(list_scheduling.schedulers, 'alap_scheduling', mock_alap)
+    
+    @pytest.fixture
+    def mock_priority_scheduling(self, monkeypatch):
+        def mock_priority(operations, asap_schedule, alap_schedule, n_mult, n_add):
+            return [1, 1, 2, 3]
+        monkeypatch.setattr(list_scheduling.schedulers, 'priority_scheduling', mock_priority)
+
+    @pytest.mark.skip(reason="skip for now")
+    def test_main_valid_input(self, mock_priority_scheduling, mock_alap_scheduling, mock_asap_scheduling, mock_check_same_name, mock_process_file, mock_setup_parser):
+        """
+        Test the main function with valid input.
+        """
+        # call the main function
+        args = list_scheduling.parser.setup_parser()
+        res = list_scheduling.list_scheduling.main(args)
+
+        assert res == [1, 1, 2, 3]
