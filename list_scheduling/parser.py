@@ -9,7 +9,7 @@ Functions:
 """
 
 import argparse
-from list_scheduling.operation import Operation
+from list_scheduling.operation import ScheduleOperation
 
 def process_file(file_path):
     """
@@ -30,8 +30,8 @@ def process_file(file_path):
 
     Returns:
     --------
-    list[Operation]
-        A list of 'Operation' objects created from the valid lines in the file.
+    list[ScheduleOperation]
+        A list of 'ScheduleOperation' objects created from the valid lines in the file.
 
     Raises:
     -------
@@ -72,7 +72,7 @@ def process_file(file_path):
                     raise ValueError(f"Error in line {line_num}: operation allowed are only + - * /")
 
                 # create a new Operation object
-                new_operation = Operation(parts[0], parts[3], parts[2], parts[4])
+                new_operation = ScheduleOperation(parts[0], parts[3], parts[2], parts[4])
                 if new_operation:
                     array_operations.append(new_operation)
 

@@ -1,6 +1,10 @@
+"""
+This module contains the Operation class, which represents a mathematical operation involving two operands
+and a specific operation type. The module also includes a utility function to extract the index from an operand string.
+"""
 import re
 
-class Operation:
+class ScheduleOperation:
     """
     Represents a mathematical operation involving two operands and a specific operation type.
     """
@@ -34,38 +38,38 @@ class Operation:
             self._type = "+"
         else:
             self._type = "*"
-        
+
         self._index1 = extract_index(input1)
         self._index2 = extract_index(input2)
-    
+
     # getters
     @property
     def name(self):
         return self._name
-    
+
     @property
     def type(self):
         return self._type
-    
+
     @property
     def input1(self):
         return self._input1
-    
+
     @property
     def input2(self):
         return self._input2
-    
+
     @property
     def index1(self):
         return self._index1
-    
+
     @property
     def index2(self):
         return self._index2
-    
+
     def __str__(self):
         return f"{self.name} := {self.input1} {self.type} {self.input2}"
-    
+
 def extract_index(input: str) -> int:
     """
     Extracts the index from an operand string that follows a specific pattern.

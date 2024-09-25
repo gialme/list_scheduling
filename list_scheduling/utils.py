@@ -1,3 +1,13 @@
+"""
+This module provides utility functions for operation scheduling algorithms.
+
+Functions:
+----------
+- priority_function(asap_schedule, alap_schedule, num_op):
+    
+- check_same_name(objects):
+"""
+
 def priority_function(asap_schedule, alap_schedule, num_op):
     """
     Computes the scheduling priority for each operation based on the difference between its ALAP and ASAP schedules.
@@ -52,9 +62,9 @@ def check_same_name(objects):
     str or bool
         The name of the duplicate operation if found. Returns 'False' if no duplicates are found.
     """
-    for i in range(len(objects)):
-        for j in range(i + 1, len(objects)):
-            if objects[i].name == objects[j].name:
-                return objects[i].name
-    
+    for i, obj1 in enumerate(objects):
+        for obj2 in objects[i + 1:]: # iterate over the remaining objects
+            if obj1.name == obj2.name:
+                return obj1.name
+
     return False
