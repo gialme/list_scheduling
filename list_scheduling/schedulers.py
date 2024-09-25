@@ -246,7 +246,7 @@ def priority_scheduling(array_operations, asap_schedule, alap_schedule, n_mult, 
         # adders
         for i in range(n_adder):
             for j in range(num_op):
-                if array_operations[j].type == '+' and ready[j] == 1:
+                if array_operations[j].type_op == '+' and ready[j] == 1:
                     if j in add:
                         # operation j is already in the add[] vector, skip
                         continue
@@ -268,7 +268,7 @@ def priority_scheduling(array_operations, asap_schedule, alap_schedule, n_mult, 
         # multipliers
         for i in range(n_mult):
             for j in range(num_op):
-                if array_operations[j].type == '*' and ready[j] == 1:
+                if array_operations[j].type_op == '*' and ready[j] == 1:
                     if j in mult:
                         continue
                     if mult[i] == -1:

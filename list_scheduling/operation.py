@@ -8,7 +8,7 @@ class ScheduleOperation:
     """
     Represents a mathematical operation involving two operands and a specific operation type.
     """
-    def __init__(self, name: str, type: str, input1: str, input2: str):
+    def __init__(self, name: str, type_op: str, input1: str, input2: str):
         """
         Init function.
 
@@ -16,7 +16,7 @@ class ScheduleOperation:
         -----------
         _name : str
             The name of the operation. Must be "u<number>" (e.g., 'u0', 'u1', 'u2').
-        _type : str
+        _type_op : str
             The type of the elementary operation, represented as either '+' or '*' 
             based on whether the operation is an addition/subtraction or multiplication/division. 
             If the operation is '+' or '-', the type is set to '+' (adder).
@@ -34,10 +34,10 @@ class ScheduleOperation:
         self._input1 = input1
         self._input2 = input2
 
-        if (type == '+' or type == '-'):
-            self._type = "+"
+        if (type_op in ('+', '-')):
+            self._type_op = "+"
         else:
-            self._type = "*"
+            self._type_op = "*"
 
         self._index1 = extract_index(input1)
         self._index2 = extract_index(input2)
@@ -45,32 +45,39 @@ class ScheduleOperation:
     # getters
     @property
     def name(self):
+        """Gets the name of the operation."""
         return self._name
 
     @property
-    def type(self):
-        return self._type
+    def type_op(self):
+        """Gets the type of the operation (+ for adder, * for multiplier)."""
+        return self._type_op
 
     @property
     def input1(self):
+        """Gets the first operand of the operation."""
         return self._input1
 
     @property
     def input2(self):
+        """Gets the second operand of the operation."""
         return self._input2
 
     @property
     def index1(self):
+        """Gets the index of the first operand (or -1 if it is an input variable)."""
         return self._index1
 
     @property
     def index2(self):
+        """Gets the index of the second operand (or -1 if it is an input variable)."""
         return self._index2
 
     def __str__(self):
-        return f"{self.name} := {self.input1} {self.type} {self.input2}"
+        """Returns a string representation of the operation."""
+        return f"{self.name} := {self.input1} {self.type_op} {self.input2}"
 
-def extract_index(input: str) -> int:
+def extract_index(operand: str) -> int:
     """
     Extracts the index from an operand string that follows a specific pattern.
 
@@ -80,7 +87,7 @@ def extract_index(input: str) -> int:
 
     Parameters:
     -----------
-    input : str
+    operand : str
         The operand string from which the index is to be extracted. 
         It is expected to be in the format "u<number>".
 
@@ -93,10 +100,10 @@ def extract_index(input: str) -> int:
 
     # regular expression pattern to match the expected format
     pattern = r"^u(\d+)$"
-    match = re.match(pattern, input)
+    match = re.match(pattern, operand)
 
     if match:
         # extract the captured group containing the integer using group(1)
         return int(match.group(1))
-    else:
-        return -1
+
+    return -1
