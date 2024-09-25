@@ -1,3 +1,7 @@
+"""
+Main module for the list scheduling algorithm.
+"""
+
 from list_scheduling.parser import setup_parser, process_file
 from list_scheduling.schedulers import asap_scheduling, alap_scheduling, priority_scheduling
 from list_scheduling.utils import check_same_name
