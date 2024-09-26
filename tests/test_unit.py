@@ -26,7 +26,7 @@ def operations():
         list_scheduling.operation.ScheduleOperation('u8', '*', 'u7', 'u5') # Operation 8: Depends on Operations 5 and 7
     ]
 
-class TestUnit:
+class TestUnitUtils:
     @pytest.mark.parametrize("asap, alap, num_op, result", [
         ([1, 1, 2, 3, 3, 4], [1, 2, 2, 3, 3, 4], 6, [1, 2, 1, 1, 1, 1]),
         ([1, 2, 2, 3, 4, 5], [1, 2, 3, 4, 4, 5], 6, [1, 1, 2, 2, 1, 1]),
