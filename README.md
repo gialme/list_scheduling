@@ -27,7 +27,7 @@ options:
 
 ## Example
 ```
-list_scheduling --nmult 2 --nadd 3 ./config.txt
+list_scheduling --nmult 2 --nadd 3 examples/example_config.txt
 ```
 
 This command tells the scheduler to apply the list scheduling algorithm to the operations wrote in the `examples/example_config.txt` file, using 2 multipliers and 3 adders 
