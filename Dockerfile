@@ -5,7 +5,7 @@ FROM python:latest
 WORKDIR /app
 
 # Copy the .whl file into the container
-COPY ./dist/list_scheduling-0.0.1-py3-none-any.whl .
+COPY ./dist/list_scheduling-1.0.0-py3-none-any.whl .
 
 # Copy the example input file into the container
 #COPY ./examples/example_config.txt /app/
