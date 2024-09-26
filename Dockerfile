@@ -11,7 +11,7 @@ COPY ./dist/list_scheduling-1.0.0-py3-none-any.whl .
 #COPY ./examples/example_config.txt /app/
 
 # Install the package using pip
-RUN python -m pip install list_scheduling-0.0.1-py3-none-any.whl
+RUN python -m pip install list_scheduling-1.0.0-py3-none-any.whl
 
 # Set the entrypoint to execute the package
 ENTRYPOINT ["list_scheduling"]
