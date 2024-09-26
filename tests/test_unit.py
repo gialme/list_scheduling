@@ -7,6 +7,7 @@ import list_scheduling.utils
 import list_scheduling.operation
 import list_scheduling.schedulers
 import list_scheduling.parser
+import list_scheduling.list_scheduling
 
 @pytest.fixture
 def operations():
@@ -29,7 +30,9 @@ class TestUnit:
     @pytest.mark.parametrize("asap, alap, num_op, result", [
         ([1, 1, 2, 3, 3, 4], [1, 2, 2, 3, 3, 4], 6, [1, 2, 1, 1, 1, 1]),
         ([1, 2, 2, 3, 4, 5], [1, 2, 3, 4, 4, 5], 6, [1, 1, 2, 2, 1, 1]),
-        ([1, 1, 2, 3, 4, 5], [1, 2, 3, 4, 4, 5], 6, [1, 2, 2, 2, 1, 1])
+        ([1, 1, 2, 3, 4, 5], [1, 2, 3, 4, 4, 5], 6, [1, 2, 2, 2, 1, 1]),
+        ([1, 1, 1, 1, 2, 2, 3, 4, 5], [1, 1, 3, 3, 2, 4, 3, 4, 5], 9, [1, 1, 3, 3, 1, 3, 1, 1, 1]),
+        ([1, 1, 1, 2, 2, 3, 3, 4, 5], [1, 1, 3, 3, 2, 4, 3, 4, 5], 9, [1, 1, 3, 2, 1, 2, 1, 1, 1])
         ])
     def test_priority_function(self, asap, alap, num_op, result):
         """
@@ -256,7 +259,6 @@ class TestListScheduling:
     @pytest.fixture
     def mock_process_file(self, monkeypatch):
         def mock_process(file):
-            print("Mocking the process_file function")
             return [
                 list_scheduling.operation.ScheduleOperation('u0', '+', 'a', 'b'),
                 list_scheduling.operation.ScheduleOperation('u1', '*', 'c', 'd'),
@@ -289,7 +291,7 @@ class TestListScheduling:
             return [1, 1, 2, 3]
         monkeypatch.setattr(list_scheduling.schedulers, 'priority_scheduling', mock_priority)
 
-    @pytest.mark.skip(reason="skip for now")
+    #@pytest.mark.skip(reason="skip for now")
     def test_main_valid_input(self, mock_priority_scheduling, mock_alap_scheduling, mock_asap_scheduling, mock_check_same_name, mock_process_file, mock_setup_parser):
         """
         Test the main function with valid input.
@@ -299,3 +301,18 @@ class TestListScheduling:
         res = list_scheduling.list_scheduling.main(args)
 
         assert res == [1, 1, 2, 3]
+    
+    @pytest.fixture
+    def mock_check_same_name_true(self, monkeypatch):
+        def mock_check(operations):
+            return "u0"
+        monkeypatch.setattr(list_scheduling.utils, 'check_same_name', mock_check)
+    
+    def test_main_duplicate(self, mock_check_same_name_true, mock_priority_scheduling, mock_alap_scheduling, mock_asap_scheduling, mock_process_file, mock_setup_parser):
+        """
+        Test the main function with duplicate operation names.
+        It should raise a ValueError.
+        """
+        with pytest.raises(ValueError, match="Error. Operation u0 has been found twice"):
+            args = list_scheduling.parser.setup_parser()
+            list_scheduling.list_scheduling.main(args)
