@@ -30,4 +30,4 @@ options:
 list_scheduling --nmult 2 --nadd 3 ./config.txt
 ```
 
-This command tells the scheduler to apply the list scheduling algorithm to the operations wrote in the `./config.txt` file, using 2 multipliers and 3 adders 
+This command tells the scheduler to apply the list scheduling algorithm to the operations wrote in the `examples/example_config.txt` file, using 2 multipliers and 3 adders 
