@@ -26,7 +26,6 @@ def main(args):
     for operation in array_operations:
         print(str(operation))
 
-
     # perform ASAP scheduling and print the vector
     asap_schedule = list_scheduling.schedulers.asap_scheduling(array_operations)
     print("ASAP scheduling: ", asap_schedule)
