@@ -28,7 +28,7 @@ def main(args):
 
     # perform ASAP scheduling and print the vector
     asap_schedule = list_scheduling.schedulers.asap_scheduling(array_operations)
-    print("ASAP scheduling: ", asap_schedule)
+    print("\nASAP scheduling: ", asap_schedule)
 
 
     # perform ALAP scheduling and print the vector
@@ -36,8 +36,10 @@ def main(args):
     print("ALAP scheduling: ", alap_schedule)
 
     # perform List scheduling
-    print("List scheduling:")
+    print("\nList scheduling:")
     list_schedule = list_scheduling.schedulers.priority_scheduling(array_operations, asap_schedule, alap_schedule, args.nmult, args.nadd)
+
+    print("\nList scheduling result:")
 
     return list_schedule
 

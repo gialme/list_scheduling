@@ -277,6 +277,8 @@ def priority_scheduling(array_operations, asap_schedule, alap_schedule, n_mult, 
                         mult[i] = j
 
         print("multipliers: ", mult)
+        # print blank line for better readability
+        print()
 
         # execute multiplication and mark the corresponding operations as scheduled (2)
         for i in range(n_mult):
