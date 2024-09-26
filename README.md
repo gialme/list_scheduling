@@ -1,7 +1,7 @@
-# List scheduling algorithm implementation
+# List scheduling algorithm using DAGs
 
-This application implements in Python the list scheduling algorithm, which schedules the operations using a priority list and with a constrained number of resources (adders and multipliers).  
-`list_scheduling` takes a configuration file as an input, containing all the operations that needs to be scheduled, along with the number of adders and multipliers available.  
+This application implements a List Scheduling Algorithm for task scheduling based on [Directed Acyclic Graphs](https://en.wikipedia.org/wiki/Directed_acyclic_graph) (DAGs) and with a constrained number of resources (adders and multipliers)
+`list_scheduling` takes the DAG to schedule as an input configuration file (see the `examples` folder), along with the number of adders and multipliers available.  
 
 ## Installation
 1. Clone this repository (or download the source code).
