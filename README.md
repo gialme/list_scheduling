@@ -1,6 +1,6 @@
 # List scheduling algorithm using DAGs
 
-This application implements a List Scheduling Algorithm for task scheduling based on [Directed Acyclic Graphs](https://en.wikipedia.org/wiki/Directed_acyclic_graph) (DAGs) and with a constrained number of resources (adders and multipliers)
+This application implements a List Scheduling Algorithm for task scheduling based on [Directed Acyclic Graphs](https://en.wikipedia.org/wiki/Directed_acyclic_graph) (DAGs) and with a constrained number of resources (adders and multipliers).  
 `list_scheduling` takes the DAG to schedule as an input configuration file (see the `examples` folder), along with the number of adders and multipliers available.  
 
 ## Installation
